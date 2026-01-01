@@ -11,8 +11,8 @@ const (
 func RiskFactory(riskStrategyName RiskStrategyName) IRiskModule {
 	switch riskStrategyName {
 	case SIMPLE:
-		return simplestrategy.NewSimpleStrategy(0.01, 0.01, 2)
+		return simplestrategy.NewSimpleStrategy(0.5, 0.5, 1)
 	default:
-		return simplestrategy.NewSimpleStrategy(0.01, 0.01, 2)
+		return simplestrategy.NewSimpleStrategy(0.5, 0.5, 1)
 	}
 }

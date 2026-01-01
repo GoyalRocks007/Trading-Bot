@@ -32,7 +32,7 @@ func (s *SimpleStrategy) CalculateRiskPerShare(price float64) float64 {
 }
 
 func (s *SimpleStrategy) CalculatePositionSize(price float64, capital float64) int {
-	riskPerTrade := capital * (s.RiskPerTrade / 100)
+	riskPerTrade := capital * (s.RiskPerTrade / 100) * 0.1 // Only 10% of capital
 	riskPerShare := price * (s.RiskPerShare / 100)
 
 	qty := int(riskPerTrade / riskPerShare)

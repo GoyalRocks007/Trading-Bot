@@ -2,7 +2,7 @@ package utils
 
 import (
 	"context"
-	kafkaclient "trading-bot/internal/client/kafka_client"
+	"trading-bot/internal/client/publisher"
 )
 
 type NotificationEvent struct {
@@ -12,7 +12,7 @@ type NotificationEvent struct {
 }
 
 func SendEvent(event *NotificationEvent) {
-	client := kafkaclient.GetKafkaClient([]string{"localhost:9092"})
+	client := publisher.GetPublisher([]string{"localhost:9092"})
 	defer client.Close()
 
 	client.Publish(context.Background(), "notifications", "", event)

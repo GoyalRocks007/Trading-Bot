@@ -13,7 +13,7 @@ type KafkaClient struct {
 	writer *kafka.Writer
 }
 
-func GetKafkaClient(brokers []string) IKafkaClient {
+func GetKafkaClient(brokers []string) *KafkaClient {
 	return &KafkaClient{
 		writer: &kafka.Writer{
 			Addr:         kafka.TCP(brokers...),
