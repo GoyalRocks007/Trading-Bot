@@ -1,6 +1,7 @@
 package orbstrategy
 
 import (
+	"fmt"
 	"sync"
 	"time"
 	"trading-bot/internal/models"
@@ -41,6 +42,7 @@ func (o *ORB) Core(c models.Candle) *models.Order {
 			return nil
 		} else {
 			o.locked[c.Symbol] = true
+			fmt.Printf("Breakout range for %s: %f - %f\n", c.Symbol, o.orbLow[c.Symbol], o.orbHigh[c.Symbol])
 		}
 	}
 
@@ -59,6 +61,7 @@ func (o *ORB) Core(c models.Candle) *models.Order {
 }
 
 func (o *ORB) Runner(bus *models.Bus, wg *sync.WaitGroup) {
+	fmt.Println("trade strategy is running")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()

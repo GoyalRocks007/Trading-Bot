@@ -2,7 +2,7 @@ package executionmodule
 
 import (
 	"trading-bot/internal/modules/db_module/order"
-	paper "trading-bot/internal/modules/execution_module/strategy"
+	paper "trading-bot/internal/modules/execution_module/strategy/paper"
 
 	"gorm.io/gorm"
 )
