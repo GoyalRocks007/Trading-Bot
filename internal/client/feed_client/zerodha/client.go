@@ -8,10 +8,12 @@ import (
 	"sync"
 	"time"
 	"trading-bot/internal/models"
+	"trading-bot/logger"
 
 	kiteconnect "github.com/zerodha/gokiteconnect/v4"
 	kitemodels "github.com/zerodha/gokiteconnect/v4/models"
 	kiteticker "github.com/zerodha/gokiteconnect/v4/ticker"
+	"go.uber.org/zap"
 )
 
 var (
@@ -77,15 +79,15 @@ func (zc *ZerodhaFeedClient) Subscribe() error {
 func (zc *ZerodhaFeedClient) registerCallbacks() {
 
 	zc.ticker.OnError(func(err error) {
-		fmt.Println("Ticker error:", err)
+		logger.Log.Error("Ticker error:", zap.Error(err))
 	})
 
 	zc.ticker.OnClose(func(code int, reason string) {
-		fmt.Println("Ticker closed:", code, reason)
+		logger.Log.Info("Ticker closed:", zap.Int("code", code), zap.String("reason", reason))
 	})
 
 	zc.ticker.OnConnect(func() {
-		fmt.Println("Ticker connected")
+		logger.Log.Info("Ticker connected")
 		// re-subscribe on connect if tokens exist
 		zc.Subscribe()
 	})
@@ -97,25 +99,25 @@ func (zc *ZerodhaFeedClient) registerCallbacks() {
 		case zc.bus.Ticks <- internalTick:
 		default:
 			// channel full, drop tick or handle backpressure here
-			fmt.Println("tick channel full, dropping tick")
+			logger.Log.Warn("tick channel full, dropping tick")
 		}
 		select {
 		case zc.bus.PositionTicks <- internalTick:
 		default:
-			fmt.Println("position ticks channel full, dropping tick")
+			logger.Log.Warn("position ticks channel full, dropping tick")
 		}
 	})
 
 	// Optional: handle reconnection notifications
 	zc.ticker.OnReconnect(func(attempt int, delay time.Duration) {
-		fmt.Printf("Reconnect attempt %d, delay %dms\n", attempt, delay.Milliseconds())
+		logger.Log.Info("Reconnect attempt", zap.Int("attempt", attempt), zap.Duration("delay", delay))
 	})
 	zc.ticker.OnNoReconnect(func(attempt int) {
-		fmt.Printf("No more reconnects, attempts: %d\n", attempt)
+		logger.Log.Info("No more reconnects", zap.Int("attempt", attempt))
 	})
 
 	zc.ticker.OnOrderUpdate(func(order kiteconnect.Order) {
-		fmt.Println("Order update:", order.OrderID)
+		logger.Log.Info("Order update:", zap.String("order_id", order.OrderID))
 	})
 }
 

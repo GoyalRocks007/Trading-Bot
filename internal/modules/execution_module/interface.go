@@ -1,6 +1,7 @@
 package executionmodule
 
 import (
+	"context"
 	"sync"
 	"trading-bot/internal/models"
 )
@@ -11,6 +12,6 @@ type IExecutionStrategy interface {
 	CancelOrder(order *models.Order) error
 	// OnPositionUpdate(position *models.Position) error
 	ClosePosition(position *models.Position) error
-	Runner(bus *models.Bus, wg *sync.WaitGroup) error
+	Runner(ctx context.Context, bus *models.Bus, wg *sync.WaitGroup) error
 	SquareOff() error
 }

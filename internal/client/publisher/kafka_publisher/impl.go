@@ -3,8 +3,9 @@ package kafkaclient
 import (
 	"context"
 	"encoding/json"
-	"log"
+	"fmt"
 	"time"
+	"trading-bot/logger"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -37,11 +38,11 @@ func (k *KafkaClient) Publish(ctx context.Context, topic, key string, message an
 	}
 
 	if err := k.writer.WriteMessages(ctx, msg); err != nil {
-		log.Printf("❌ Failed to publish to topic %s: %v", topic, err)
+		logger.Log.Error(fmt.Sprintf("❌ Failed to publish to topic %s: %v", topic, err))
 		return err
 	}
 
-	log.Printf("📤 Published to topic=%s key=%s value=%s", topic, key, string(valueBytes))
+	logger.Log.Info(fmt.Sprintf("📤 Published to topic=%s key=%s value=%s", topic, key, string(valueBytes)))
 	return nil
 }
 
