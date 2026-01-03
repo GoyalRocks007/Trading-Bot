@@ -14,6 +14,7 @@ import (
 	executionmodule "trading-bot/internal/modules/execution_module"
 	riskmodule "trading-bot/internal/modules/risk_module"
 	tradestrategymodule "trading-bot/internal/modules/trade_strategy_module"
+	"trading-bot/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -26,6 +27,10 @@ func main() {
 			panic("env file not found")
 		}
 	}
+
+	logger.Init()
+	defer logger.Log.Sync()
+
 	router := gin.Default()
 	db.InitDb()
 	bus := models.NewBus(20000)

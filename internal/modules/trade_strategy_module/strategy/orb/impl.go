@@ -1,11 +1,13 @@
 package orbstrategy
 
 import (
+	"context"
 	"fmt"
 	"sync"
 	"time"
 	"trading-bot/internal/models"
 	riskmodule "trading-bot/internal/modules/risk_module"
+	"trading-bot/logger"
 )
 
 type ORB struct {
@@ -42,7 +44,7 @@ func (o *ORB) Core(c models.Candle) *models.Order {
 			return nil
 		} else {
 			o.locked[c.Symbol] = true
-			fmt.Printf("Breakout range for %s: %f - %f\n", c.Symbol, o.orbLow[c.Symbol], o.orbHigh[c.Symbol])
+			logger.Log.Info(fmt.Sprintf("Breakout range for %s: %f - %f\n", c.Symbol, o.orbLow[c.Symbol], o.orbHigh[c.Symbol]))
 		}
 	}
 
@@ -60,29 +62,39 @@ func (o *ORB) Core(c models.Candle) *models.Order {
 	return nil
 }
 
-func (o *ORB) Runner(bus *models.Bus, wg *sync.WaitGroup) {
-	fmt.Println("trade strategy is running")
+func (o *ORB) Runner(ctx context.Context, bus *models.Bus, wg *sync.WaitGroup) {
+	logger.Log.Info("trade strategy is running")
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		for c := range bus.Candles {
-			if ord := o.Core(c); ord != nil {
-				stop, target := o.RiskStrategy.CalculateStopLossAndTarget(ord.Entry, ord.Side)
-				qty := o.RiskStrategy.CalculatePositionSize(ord.Entry, bus.Equity)
-				remCap := bus.GetRemCap()
-				switch ord.Side {
-				case models.Buy:
-					if float64(qty)*ord.Entry > remCap {
-						qty = int(remCap / ord.Entry)
+		for {
+			select {
+			case c, ok := <-bus.Candles:
+				if !ok {
+					logger.Log.Info("candle channel closed")
+					return
+				}
+				if ord := o.Core(c); ord != nil {
+					stop, target := o.RiskStrategy.CalculateStopLossAndTarget(ord.Entry, ord.Side)
+					qty := o.RiskStrategy.CalculatePositionSize(ord.Entry, bus.Equity)
+					remCap := bus.GetRemCap()
+					switch ord.Side {
+					case models.Buy:
+						if float64(qty)*ord.Entry > remCap {
+							qty = int(remCap / ord.Entry)
+						}
+					}
+					if qty > 0 && stop > 0 && target > 0 {
+						ord.Stop = stop
+						ord.Target = target
+						ord.Qty = qty
+						bus.Orders <- ord
 					}
 				}
-				if qty > 0 && stop > 0 && target > 0 {
-					ord.Stop = stop
-					ord.Target = target
-					ord.Qty = qty
-					bus.Orders <- ord
-				}
+			case <-ctx.Done():
+				return
 			}
+
 		}
 	}()
 }

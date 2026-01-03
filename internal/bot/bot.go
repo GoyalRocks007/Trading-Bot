@@ -53,10 +53,16 @@ func (b *Bot) Start() error {
 	b.wg = &sync.WaitGroup{}
 	b.ctx, b.cancel = context.WithCancel(context.Background())
 	b.FeedClient.Start(b.wg)
-	b.IngressModule.Runner(b.Bus, b.candleDuration, b.wg)
-	b.Strategy.Runner(b.Bus, b.wg)
-	b.Execution.Runner(b.Bus, b.wg)
+	b.IngressModule.Runner(b.ctx, b.Bus, b.candleDuration, b.wg)
+	b.Strategy.Runner(b.ctx, b.Bus, b.wg)
+	b.Execution.Runner(b.ctx, b.Bus, b.wg)
 
 	b.wg.Wait()
+	return nil
+}
+
+func (b *Bot) Stop() error {
+	b.FeedClient.Stop()
+	b.cancel()
 	return nil
 }
